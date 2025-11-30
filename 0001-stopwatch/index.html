@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stopwatch</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #0a0a0a;
+        color: #fafafa;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 60px 20px 20px;
+      }
+
+      main {
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+      }
+
+      header {
+        margin-bottom: 60px;
+      }
+
+      h1 {
+        font-size: 1rem;
+        font-weight: 400;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        opacity: 0.4;
+      }
+
+      #time {
+        font-size: clamp(3rem, 12vw, 6rem);
+        font-weight: 200;
+        letter-spacing: 0.05em;
+        margin-bottom: 60px;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 60px;
+      }
+
+      button {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fafafa;
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 400;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        padding: 0;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      button::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+      }
+
+      button:hover::before {
+        width: 100%;
+        height: 100%;
+      }
+
+      button:hover {
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-2px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      #start {
+        width: 100px;
+        height: 100px;
+        border-width: 2px;
+        font-size: 0.8rem;
+      }
+
+      #laps {
+        list-style: none;
+        padding: 0;
+        overflow: visible;
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+
+      #laps li {
+        display: grid;
+        grid-template-columns: 60px 1fr 1fr;
+        gap: 20px;
+        padding: 14px 20px;
+        font-size: 0.9rem;
+        font-weight: 300;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        opacity: 0;
+        animation: fadeIn 0.4s forwards;
+        font-variant-numeric: tabular-nums;
+        align-items: center;
+      }
+
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+        }
+      }
+
+      #laps li:last-child {
+        border-bottom: none;
+      }
+
+      .lap-number {
+        opacity: 0.4;
+        font-size: 0.85rem;
+        text-align: left;
+      }
+
+      .lap-diff {
+        opacity: 0.5;
+        font-size: 0.85rem;
+        text-align: center;
+      }
+
+      .lap-total {
+        font-weight: 300;
+        text-align: right;
+      }
+
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 0.85rem;
+        }
+
+        button {
+          width: 70px;
+          height: 70px;
+          font-size: 0.65rem;
+        }
+
+        #start {
+          width: 80px;
+          height: 80px;
+        }
+
+        .buttons {
+          gap: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Stopwatch</h1>
+      </header>
+      <p id="time">00:00:00:00</p>
+      <div class="buttons">
+        <button id="reset">Reset</button>
+        <button id="start">Start</button>
+        <button id="lap">Lap</button>
+      </div>
+      <ul id="laps"></ul>
+    </main>
+    <script>
+      // VARIABLES
+      let stopwatch = null;
+      let totalCentiseconds = 0;
+      let laps = [];
+
+      // SELECTORS
+      const $ = (selector) => document.querySelector(selector);
+      const $timeDisplay = $("#time");
+      const $resetButton = $("#reset");
+      const $startButton = $("#start");
+      const $lapButton = $("#lap");
+      const $lapsList = $("#laps");
+
+      // FUNCTIONS
+      const centisecondsToHMS = (cs) => {
+        const hours = Math.floor(cs / 360000);
+        cs %= 360000;
+        const minutes = Math.floor(cs / 6000);
+        cs %= 6000;
+        const seconds = Math.floor(cs / 100);
+        const csPart = cs % 100;
+
+        return (
+          `${hours.toString().padStart(2, "0")}:` +
+          `${minutes.toString().padStart(2, "0")}:` +
+          `${seconds.toString().padStart(2, "0")}:` +
+          `${csPart.toString().padStart(2, "0")}`
+        );
+      };
+
+      // Start Stopwatch
+      const startTime = () => {
+        totalCentiseconds++;
+        return totalCentiseconds;
+      };
+
+      // Reset Stopwatch
+      const resetTime = () => {
+        totalCentiseconds = 0;
+        laps = [];
+      };
+
+      // Register lap
+      const registerLap = () => {
+        const prevLapTime =
+          laps.length > 0 ? laps[laps.length - 1].centiseconds : 0;
+        const diff = totalCentiseconds - prevLapTime;
+
+        const newLap = {
+          centiseconds: totalCentiseconds,
+          diff,
+        };
+
+        laps.push(newLap);
+        return laps;
+      };
+
+      // Display Laps
+      const displayLaps = (laps) => {
+        return laps
+          .map((lap, index) => {
+            const lapNumber = (index + 1).toString().padStart(2, "0");
+            return `
+              <span class="lap-number">#${lapNumber}</span>
+              <span class="lap-diff">+${centisecondsToHMS(lap.diff)}</span>
+              <span class="lap-total">${centisecondsToHMS(
+                lap.centiseconds
+              )}</span>
+            `;
+          })
+          .reverse();
+      };
+
+      // Display Time
+      const displayTime = () => {
+        $timeDisplay.textContent = centisecondsToHMS(totalCentiseconds);
+      };
+
+      // EVENT LISTENERS
+      $startButton.addEventListener("click", () => {
+        if (stopwatch) {
+          clearInterval(stopwatch);
+          stopwatch = null;
+          $startButton.textContent = "Start";
+        } else {
+          stopwatch = setInterval(() => {
+            startTime();
+            displayTime();
+          }, 10);
+          $startButton.textContent = "Pause";
+        }
+      });
+
+      $resetButton.addEventListener("click", () => {
+        resetTime();
+        displayTime();
+        $lapsList.innerHTML = "";
+        clearInterval(stopwatch);
+        stopwatch = null;
+        $startButton.textContent = "Start";
+      });
+
+      $lapButton.addEventListener("click", () => {
+        if (!stopwatch) return;
+
+        registerLap();
+        const lapsDisplay = displayLaps(laps);
+        $lapsList.innerHTML = lapsDisplay
+          .map((lap) => `<li>${lap}</li>`)
+          .join("");
+      });
+
+      // Keyboard Shortcuts
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "s") {
+          event.preventDefault();
+          $startButton.click();
+        } else if (event.key === "r") {
+          $resetButton.click();
+        } else if (event.key === "l") {
+          $lapButton.click();
+        }
+      });
+    </script>
+  </body>
+</html>
