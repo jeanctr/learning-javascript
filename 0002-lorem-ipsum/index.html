@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lorem Ipsum Generator</title>
+  </head>
+  <body>
+    <header>
+      <h1>Lorem Ipsum Generator</h1>
+    </header>
+    <main>
+      <form id="lorem-form">
+        <input type="number" id="quantity" name="quantity" min="1" value="1" />
+        <select name="type" id="type">
+          <option value="paragraphs">Paragraphs</option>
+          <option value="sentences">Sentences</option>
+          <option value="words">Words</option>
+        </select>
+        <button id="generate">Generate</button>
+      </form>
+
+      <section id="output"></section>
+    </main>
+
+    <script>
+      // Resource <https://loremipsum.io/>
+
+      const $ = (selector) => document.querySelector(selector);
+      const loremText =
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+
+      $("#lorem-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const quantity = parseInt($("#quantity").value, 10);
+        let paragraphs = "";
+        for (let i = 0; i < quantity; i++) {
+          paragraphs += `<p>${loremText}</p>`;
+        }
+
+        $("#output").innerHTML = paragraphs;
+      });
+    </script>
+  </body>
+</html>
